@@ -1,0 +1,43 @@
+# Use eksctl utils schema to get the raw JSON schema.
+# assumes we are using an existing VPC with all relevant network stood up and existing endpoints.
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: use1-pvt
+  region: us-east-1
+  version: "1.17"
+
+iam:
+  withOIDC: true
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
+
+privateCluster:
+  enabled: true
+  # Commented out these as the Endpoints exist in the VPC. The endpoints supported in additionalEndpointServices are autoscaling, cloudformation and logs.
+  # All endpoints required for a fully private cluster are not available in eksctl at the time of writing this config.
+  # additionalEndpointServices:
+  # For Cluster Autoscaler
+  # - "autoscaling"
+  # CloudWatch logging
+  # - "logs"
+
+vpc:
+  subnets:
+    private:
+      #replace with relevant subnet IDs for existing VPC.
+      us-east-1a: { id: subnet-id-a }
+      us-east-1b: { id: subnet-id-b }
+      us-east-1c: { id: subnet-id-c }
+
+nodeGroups:
+  - name: ng-1-workers
+    labels: { role: workers }
+    instanceType: t3.medium
+    desiredCapacity: 2
+    privateNetworking: true
+    ssh: # use existing EC2 key
+      publicKeyName: ssh-key-name
